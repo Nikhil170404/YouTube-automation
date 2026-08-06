@@ -338,7 +338,7 @@ const FAQS = [
   },
   {
     q: "How is ChannelOS different from TubeBuddy or VidIQ?",
-    a: "TubeBuddy and VidIQ are excellent SEO tools but don't do comment automation or thumbnail A/B testing at a meaningful level. CommentShark does comments but nothing else. Thumbly does thumbnails only. ChannelOS combines all six core jobs — comments, SEO, scheduling, analytics, thumbnail testing, and content repurposing — in one platform at a lower combined price than stacking those tools.",
+    a: "TubeBuddy and VidIQ are excellent SEO tools but don't do comment automation or thumbnail A/B testing at a meaningful level. NapoleonCat does social inbox management (including YouTube comments) but starts at $89/month and has no SEO, scheduling, or thumbnail features. ChannelOS combines all six core jobs — comments, SEO, scheduling, analytics, thumbnail testing, and content repurposing — in one platform at a lower combined price than stacking two of those tools.",
   },
   {
     q: "Do you offer refunds?",
@@ -444,14 +444,14 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <p className="text-center text-xs text-muted uppercase tracking-[0.2em] font-semibold mb-6">Replace all of these</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {["TubeBuddy $26/mo", "VidIQ $39/mo", "CommentShark $19/mo", "Thumbly $19/mo", "Morningfame $14/mo"].map((t) => (
+              {["TubeBuddy $23+/mo", "VidIQ $39+/mo", "NapoleonCat $89/mo", "Morningfame $13/mo"].map((t) => (
                 <div key={t} className="text-xs text-muted line-through bg-surface-2/50 border border-border/50 rounded-lg px-3 py-2 font-medium">
                   {t}
                 </div>
               ))}
               <span className="text-muted font-bold text-lg mx-2">=</span>
               <div className="text-sm font-bold text-accent bg-accent/10 border border-accent/30 rounded-lg px-4 py-2">
-                $117/mo stacked
+                $164+/mo stacked
               </div>
               <span className="text-muted font-bold text-lg mx-2">→</span>
               <div className="text-sm font-bold text-white bg-gradient-to-r from-accent to-accent-2 rounded-lg px-4 py-2 glow-accent-sm">
@@ -469,7 +469,7 @@ export default function LandingPage() {
                 { num: 90, suffix: "%", label: "of creators report burnout — driven by admin, not content" },
                 { num: 71, suffix: "%", label: "have considered quitting YouTube entirely" },
                 { num: 5,  suffix: "+", label: "separate tools the average creator juggles today" },
-                { num: 64, suffix: "$", label: "average monthly spend stacking TubeBuddy + 2 other tools", prefix: true },
+                { num: 89, suffix: "$", label: "NapoleonCat alone — just for comment management", prefix: true },
               ].map((s, i) => (
                 <div key={i} className="bg-surface/60 px-6 py-8 text-center">
                   <p className="text-4xl font-black text-white mb-2">
@@ -599,13 +599,13 @@ export default function LandingPage() {
                 </thead>
                 <tbody>
                   {[
-                    { name: "TubeBuddy",     price: "$26", c: false, s: true,  seo: true,  ab: true,  an: false, r: false, us: false },
-                    { name: "VidIQ",         price: "$39", c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
-                    { name: "CommentShark",  price: "$19", c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
-                    { name: "NapoleonCat",   price: "$27", c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
-                    { name: "Thumbly",       price: "$19", c: false, s: false, seo: false, ab: true,  an: false, r: false, us: false },
-                    { name: "Morningfame",   price: "$14", c: false, s: false, seo: false, ab: false, an: true,  r: false, us: false },
-                    { name: "ChannelOS Pro", price: "$19", c: true,  s: true,  seo: true,  ab: true,  an: true,  r: true,  us: true  },
+                    { name: "TubeBuddy",     price: "$23+", c: false, s: true,  seo: true,  ab: true,  an: false, r: false, us: false },
+                    { name: "VidIQ",         price: "$39+", c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
+                    { name: "NapoleonCat",   price: "$89",  c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
+                    { name: "Morningfame",   price: "$13",  c: false, s: false, seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "Hootsuite",     price: "$99",  c: true,  s: true,  seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "Sprout Social", price: "$249", c: true,  s: true,  seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "ChannelOS Pro", price: "$19",  c: true,  s: true,  seo: true,  ab: true,  an: true,  r: true,  us: true  },
                   ].map((row) => {
                     const checks = [row.c, row.s, row.seo, row.ab, row.an, row.r];
                     return (
@@ -631,7 +631,7 @@ export default function LandingPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted text-center mt-4">Prices shown are approximate mid-tier monthly plans as of 2026.</p>
+            <p className="text-xs text-muted text-center mt-4">Prices shown are mid-tier monthly plans as of August 2026. TubeBuddy Legend; VidIQ Boost; NapoleonCat Standard.</p>
           </div>
         </section>
 

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { Navbar } from "@/components/public/Navbar";
+import { Footer } from "@/components/public/Footer";
 
 // ─── Tiny icon components ──────────────────────────────────────────────────────
 function Icon({ d, size = 18, className }: { d: string; size?: number; className?: string }) {
@@ -230,70 +232,7 @@ function HeroMock() {
   );
 }
 
-// ─── Nav ──────────────────────────────────────────────────────────────────────
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-
-  const links = [
-    { href: "#features",    label: "Features"    },
-    { href: "#how",         label: "How It Works" },
-    { href: "#comparison",  label: "Compare"     },
-    { href: "#pricing",     label: "Pricing"     },
-    { href: "#faq",         label: "FAQ"         },
-  ];
-
-  return (
-    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "glass border-b border-border/60 shadow-lg" : "bg-transparent"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-6 rounded-md bg-accent flex items-center justify-center relative overflow-hidden group-hover:glow-accent-sm transition-all">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
-              <polygon points="3,2 11,7 3,12" />
-            </svg>
-          </div>
-          <span className="text-white font-bold text-[15px] tracking-tight">ChannelOS</span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-6">
-          {links.map((l) => (
-            <a key={l.href} href={l.href}
-              className="text-sm text-muted hover:text-white transition-colors font-medium">{l.label}</a>
-          ))}
-        </div>
-
-        <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm text-muted hover:text-white transition-colors font-medium px-3 py-1.5">Sign in</Link>
-          <Link href="/signup" className="bg-accent hover:bg-accent-2 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all glow-accent-sm">
-            Start Free
-          </Link>
-        </div>
-
-        <button onClick={() => setOpen(!open)} className="md:hidden text-muted hover:text-white p-1">
-          <Icon d={open ? icons.x : icons.menu} size={20} />
-        </button>
-      </div>
-
-      {open && (
-        <div className="md:hidden glass border-t border-border/60 px-4 py-4 space-y-2">
-          {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)}
-              className="block text-sm text-text-2 hover:text-white py-2 font-medium">{l.label}</a>
-          ))}
-          <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
-            <Link href="/login"  className="text-sm text-center text-text-2 py-2">Sign in</Link>
-            <Link href="/signup" className="bg-accent text-white text-sm font-semibold py-2 rounded-lg text-center">Start Free</Link>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-}
+// Nav is now the shared Navbar component imported above
 
 // ─── Features data ────────────────────────────────────────────────────────────
 const FEATURES = [
@@ -435,7 +374,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <Nav />
+      <Navbar />
 
       <main className="grid-bg noise">
 
@@ -829,76 +768,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── FOOTER ───────────────────────────────────────────────────── */}
-        <footer className="border-t border-border/50 py-14 bg-surface/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
-              <div className="lg:col-span-2">
-                <Link href="/" className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-6 rounded-md bg-accent flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><polygon points="3,2 11,7 3,12" /></svg>
-                  </div>
-                  <span className="text-white font-bold text-[15px]">ChannelOS</span>
-                </Link>
-                <p className="text-text-2 text-sm leading-relaxed max-w-xs">
-                  The all-in-one YouTube channel automation platform for creators and agencies. Built to replace your fragmented tool stack.
-                </p>
-              </div>
-              {[
-                {
-                  title: "Product",
-                  links: [
-                    { href: "#features",   label: "Features"           },
-                    { href: "#how",        label: "How It Works"       },
-                    { href: "#comparison", label: "Compare"            },
-                    { href: "#pricing",    label: "Pricing"            },
-                    { href: "/changelog",  label: "Changelog"          },
-                  ],
-                },
-                {
-                  title: "Use Cases",
-                  links: [
-                    { href: "/use-cases/comment-automation",    label: "Comment Automation"  },
-                    { href: "/use-cases/video-scheduler",       label: "Video Scheduler"     },
-                    { href: "/use-cases/youtube-seo",           label: "YouTube SEO"         },
-                    { href: "/use-cases/thumbnail-ab-testing",  label: "Thumbnail A/B Test"  },
-                    { href: "/use-cases/agencies",              label: "For Agencies"        },
-                  ],
-                },
-                {
-                  title: "Company",
-                  links: [
-                    { href: "/about",   label: "About"       },
-                    { href: "/blog",    label: "Blog"        },
-                    { href: "#faq",     label: "FAQ"         },
-                    { href: "/privacy", label: "Privacy"     },
-                    { href: "/terms",   label: "Terms"       },
-                  ],
-                },
-              ].map((col) => (
-                <div key={col.title}>
-                  <h4 className="text-[11px] text-muted uppercase tracking-[0.15em] font-bold mb-4">{col.title}</h4>
-                  <ul className="space-y-2.5">
-                    {col.links.map((l) => (
-                      <li key={l.label}>
-                        <Link href={l.href} className="text-sm text-text-2 hover:text-white transition-colors">{l.label}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t border-border/40 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-muted">© 2026 ChannelOS. All rights reserved.</p>
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-muted">Not affiliated with YouTube or Google.</span>
-                <Link href="/sitemap.xml" className="text-xs text-muted hover:text-white transition-colors">Sitemap</Link>
-              </div>
-            </div>
-          </div>
-        </footer>
       </main>
+
+      <Footer />
     </>
   );
 }

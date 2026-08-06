@@ -10,6 +10,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const url = getAuthUrl();
+  // Encode user ID in state so Safari (ITP) cookie loss doesn't break the callback
+  const state = Buffer.from(JSON.stringify({ uid: user.id, ts: Date.now() })).toString("base64url");
+  const url = getAuthUrl(state);
   return NextResponse.redirect(url);
 }

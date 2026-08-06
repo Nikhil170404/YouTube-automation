@@ -9,7 +9,7 @@ export function createOAuthClient() {
   );
 }
 
-export function getAuthUrl(): string {
+export function getAuthUrl(state?: string): string {
   const oauth2Client = createOAuthClient();
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
@@ -21,6 +21,7 @@ export function getAuthUrl(): string {
       "https://www.googleapis.com/auth/userinfo.email",
     ],
     prompt: "consent",
+    ...(state ? { state } : {}),
   });
 }
 

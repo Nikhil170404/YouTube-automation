@@ -14,22 +14,45 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Use anon client only to verify the authenticated user session
-    const authClient = await createClient();
-    const { data: { user } } = await authClient.auth.getUser();
-    if (!user) {
+    // Resolve user ID: prefer state param (Safari ITP strips cookies on cross-site redirect)
+    // then fall back to session cookie (Edge / Chrome / Firefox)
+    let userId: string | null = null;
+    const stateParam = searchParams.get("state");
+    if (stateParam) {
+      try {
+        const parsed = JSON.parse(Buffer.from(stateParam, "base64url").toString());
+        // Accept state tokens issued within the last 10 minutes
+        if (parsed.uid && typeof parsed.uid === "string" && Date.now() - parsed.ts < 10 * 60 * 1000) {
+          userId = parsed.uid;
+        }
+      } catch { /* malformed state — fall through to cookie */ }
+    }
+
+    if (!userId) {
+      const authClient = await createClient();
+      const { data: { user } } = await authClient.auth.getUser();
+      userId = user?.id ?? null;
+    }
+
+    if (!userId) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
     }
 
     // Use service client for all DB operations — bypasses RLS on server
     const supabase = await createServiceClient();
 
+    // Fetch user metadata from Auth so we can upsert the profile
+    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+    if (!authUser) {
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
+    }
+
     // Ensure profile row exists (trigger may not have fired if tables were created after signup)
     await supabase.from("profiles").upsert({
-      id:         user.id,
-      email:      user.email!,
-      full_name:  user.user_metadata?.full_name  ?? null,
-      avatar_url: user.user_metadata?.avatar_url ?? null,
+      id:         userId,
+      email:      authUser.email!,
+      full_name:  authUser.user_metadata?.full_name  ?? null,
+      avatar_url: authUser.user_metadata?.avatar_url ?? null,
     }, { onConflict: "id" });
 
     const tokens      = await exchangeCodeForTokens(code);
@@ -42,13 +65,13 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     const { count } = await supabase
       .from("youtube_channels")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("is_active", true);
 
     const limits: Record<string, number> = {
@@ -63,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     // Upsert the channel and check for errors
     const { error: upsertError } = await supabase.from("youtube_channels").upsert({
-      user_id:          user.id,
+      user_id:          userId,
       channel_id:       channelInfo.channelId,
       channel_name:     channelInfo.channelName,
       channel_handle:   channelInfo.channelHandle,

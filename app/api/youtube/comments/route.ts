@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUnrepliedComments, postCommentReply } from "@/lib/youtube/comments";
-import { generateCommentReply } from "@/lib/claude";
+import { generateCommentReply } from "@/lib/gemini";
 
 // GET /api/youtube/comments?channelId=xxx — fetch unreplied comments
 export async function GET(request: NextRequest) {

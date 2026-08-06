@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateCommentReply, generateVideoIdeas, optimizeTitle, generateVideoDescription } from "@/lib/claude";
+import { generateCommentReply, generateVideoIdeas, optimizeTitle, generateVideoDescription, researchKeywords } from "@/lib/gemini";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
         keywords:    body.keywords || [],
       });
       return NextResponse.json({ description });
+    }
+
+    case "keyword_research": {
+      const keywords = await researchKeywords(body.query || "");
+      return NextResponse.json({ keywords });
     }
 
     default:

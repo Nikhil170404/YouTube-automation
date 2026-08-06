@@ -599,11 +599,11 @@ export default function LandingPage() {
                 </thead>
                 <tbody>
                   {[
-                    { name: "TubeBuddy",    price: "$23+", c: false, s: true,  seo: true,  ab: true,  an: false, r: false, us: false },
+                    { name: "TubeBuddy",    price: "$23+", c: false, s: true,  seo: true,  ab: true,  an: true,  r: false, us: false },
                     { name: "VidIQ",        price: "$39+", c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
                     { name: "CommentShark", price: "$20",  c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
-                    { name: "NapoleonCat",  price: "$27+", c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
-                    { name: "Morningfame",  price: "$13",  c: false, s: false, seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "NapoleonCat",  price: "$27+", c: true,  s: true,  seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "Morningfame",  price: "$13",  c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
                     { name: "ChannelOS Pro",price: "$19",  c: true,  s: true,  seo: true,  ab: true,  an: true,  r: true,  us: true  },
                   ].map((row) => {
                     const checks = [row.c, row.s, row.seo, row.ab, row.an, row.r];

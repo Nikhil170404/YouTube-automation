@@ -5,16 +5,22 @@ import type { YTComment } from "@/types/youtube";
 export async function getUnrepliedComments(
   tokens: { access_token: string; refresh_token: string },
   channelId: string,
-  maxResults = 50
+  maxResults = 50,
+  videoId?: string
 ): Promise<YTComment[]> {
   const { youtube } = createYouTubeClient(tokens);
-  const res = await youtube.commentThreads.list({
+  const params: any = {
     part: ["snippet", "replies"],
-    allThreadsRelatedToChannelId: channelId,
     maxResults,
     order: "time",
     moderationStatus: "published",
-  });
+  };
+  if (videoId) {
+    params.videoId = videoId;
+  } else {
+    params.allThreadsRelatedToChannelId = channelId;
+  }
+  const res = await youtube.commentThreads.list(params);
 
   const comments: YTComment[] = [];
   for (const thread of res.data.items || []) {

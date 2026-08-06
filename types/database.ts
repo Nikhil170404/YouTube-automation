@@ -112,6 +112,7 @@ export interface Database {
           reply_template: string | null;
           use_ai: boolean;
           ai_context: string | null;
+          video_id: string | null;
           is_active: boolean;
           match_count: number;
           created_at: string;
@@ -125,6 +126,7 @@ export interface Database {
           reply_template?: string | null;
           use_ai?: boolean;
           ai_context?: string | null;
+          video_id?: string | null;
           is_active?: boolean;
           match_count?: number;
           created_at?: string;
@@ -138,6 +140,7 @@ export interface Database {
           reply_template?: string | null;
           use_ai?: boolean;
           ai_context?: string | null;
+          video_id?: string | null;
           is_active?: boolean;
           match_count?: number;
           created_at?: string;

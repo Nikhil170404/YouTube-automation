@@ -54,9 +54,14 @@ function ChannelsContent() {
       )}
       {error && (
         <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 mb-5 text-sm text-accent">
-          {error === "channel_limit_reached"
-            ? "You've reached your channel limit. Upgrade your plan to add more channels."
-            : "Connection failed. Please try again."}
+          {error === "channel_limit_reached"  && "You've reached your channel limit. Upgrade your plan to add more channels."}
+          {error === "youtube_auth_failed"    && "Google denied the connection. Please try again."}
+          {error === "token_exchange_failed"  && "Failed to exchange Google auth code. Check that YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REDIRECT_URI are set in Vercel."}
+          {error === "token_missing"          && "Google returned incomplete tokens. Please try again."}
+          {error === "channel_fetch_failed"   && "Connected to Google but could not fetch your YouTube channel. Make sure your Google account has a YouTube channel."}
+          {error === "db_init_failed"         && "Database connection failed. Check that SUPABASE_SERVICE_ROLE_KEY is set in Vercel."}
+          {error === "save_failed"            && "Connected successfully but failed to save the channel to the database. Check Vercel logs."}
+          {!["channel_limit_reached","youtube_auth_failed","token_exchange_failed","token_missing","channel_fetch_failed","db_init_failed","save_failed"].includes(error) && `Connection failed (${error}). Please try again.`}
         </div>
       )}
 

@@ -35,49 +35,60 @@ export default function SeoPage() {
       });
   }, []);
 
-  async function searchKeywords() {
-    if (!kwQuery.trim()) return;
-    setLoading(true);
+  async function aiCall(body: object): Promise<any> {
     const res = await fetch("/api/ai/reply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "keyword_research", query: kwQuery }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
-    setKwResults(data.keywords || []);
-    setLoading(false);
+    if (!res.ok || data.error) throw new Error(data.error || "AI request failed");
+    return data;
+  }
+
+  async function searchKeywords() {
+    if (!kwQuery.trim()) return;
+    setLoading(true);
+    try {
+      const data = await aiCall({ action: "keyword_research", query: kwQuery });
+      setKwResults(data.keywords || []);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function optimizeTitle() {
     if (!titleInput.trim()) return;
     setLoading(true);
-    const res = await fetch("/api/ai/reply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "optimize_title", title: titleInput, keywords: titleKws }),
-    });
-    const data = await res.json();
-    setTitleResults(data.titles || []);
-    setLoading(false);
+    try {
+      const data = await aiCall({ action: "optimize_title", title: titleInput, keywords: titleKws });
+      setTitleResults(data.titles || []);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function generateDescription() {
     if (!descTitle.trim()) return;
     setLoading(true);
-    const res = await fetch("/api/ai/reply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      const data = await aiCall({
         action: "generate_description",
         title: descTitle,
         keyPoints: descKeyPoints.split("\n").filter(Boolean),
         keywords: descKws,
         channelName: channels.find((c) => c.id === selected)?.channel_name || "",
-      }),
-    });
-    const data = await res.json();
-    setDescription(data.description || "");
-    setLoading(false);
+      });
+      setDescription(data.description || "");
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

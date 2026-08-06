@@ -38,19 +38,30 @@ export default function CommentsPage() {
 
   async function generateReply(comment: YTComment) {
     setReplying(comment.id);
-    const res = await fetch("/api/ai/reply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action:       "generate_reply",
-        comment:      comment.text,
-        authorName:   comment.authorName,
-        voiceContext: aiContext || undefined,
-      }),
-    });
-    const { reply } = await res.json();
-    setEditText((p) => ({ ...p, [comment.id]: reply }));
-    setReplying(null);
+    try {
+      const res = await fetch("/api/ai/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action:       "generate_reply",
+          comment:      comment.text,
+          authorName:   comment.authorName,
+          voiceContext: aiContext || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setStatus(`AI error: ${data.error || "Request failed"}`);
+        setTimeout(() => setStatus(""), 6000);
+      } else {
+        setEditText((p) => ({ ...p, [comment.id]: data.reply }));
+      }
+    } catch {
+      setStatus("AI request failed — check your internet connection.");
+      setTimeout(() => setStatus(""), 5000);
+    } finally {
+      setReplying(null);
+    }
   }
 
   async function sendReply(comment: YTComment, useAI: boolean) {

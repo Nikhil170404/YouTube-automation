@@ -60,11 +60,12 @@ const RANGES = [
 ];
 
 export default function AnalyticsPage() {
-  const [channels,  setChannels]  = useState<YoutubeChannel[]>([]);
-  const [selected,  setSelected]  = useState("");
-  const [range,     setRange]     = useState(30);
-  const [analytics, setAnalytics] = useState<YTAnalytics[]>([]);
-  const [loading,   setLoading]   = useState(false);
+  const [channels,     setChannels]     = useState<YoutubeChannel[]>([]);
+  const [selected,     setSelected]     = useState("");
+  const [range,        setRange]        = useState(30);
+  const [analytics,    setAnalytics]    = useState<YTAnalytics[]>([]);
+  const [loading,      setLoading]      = useState(false);
+  const [apiError,     setApiError]     = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -84,13 +85,22 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!selected) return;
     setLoading(true);
+    setApiError(null);
     fetch(`/api/youtube/analytics?channelId=${selected}&days=${range}`)
       .then((r) => r.json())
-      .then(({ analytics: a }) => {
-        setAnalytics(a || []);
+      .then((json) => {
+        if (json.error) {
+          setApiError(json.error);
+          setAnalytics([]);
+        } else {
+          setAnalytics(json.analytics || []);
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => {
+        setApiError(String(e));
+        setLoading(false);
+      });
   }, [selected, range]);
 
   const selectedChannel = channels.find((c) => c.id === selected);
@@ -227,9 +237,13 @@ export default function AnalyticsPage() {
                 </>
               ) : (
                 <div className="text-center py-16 bg-surface border border-border/50 rounded-2xl">
-                  <span className="text-4xl mb-4 block">📉</span>
-                  <p className="text-white font-bold mb-1">No analytics data yet</p>
-                  <p className="text-muted text-sm">Analytics are collected daily. Check back tomorrow for your first data points.</p>
+                  <span className="text-4xl mb-4 block">{apiError ? "⚠️" : "📉"}</span>
+                  <p className="text-white font-bold mb-1">{apiError ? "Analytics unavailable" : "No analytics data yet"}</p>
+                  <p className="text-muted text-sm">
+                    {apiError
+                      ? `YouTube Analytics error: ${apiError}. Your channel may need to be older or have more views for data to appear.`
+                      : "Analytics are collected daily. Check back tomorrow for your first data points."}
+                  </p>
                 </div>
               )}
             </>

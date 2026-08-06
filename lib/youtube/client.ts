@@ -118,11 +118,14 @@ export async function getAnalytics(
   endDate: string
 ): Promise<YTAnalytics[]> {
   const { youtubeAnalytics } = createYouTubeClient(tokens);
+  // estimatedRevenue requires YouTube Partner Program (monetization)
+  // annotationClickThroughRate was deprecated and removed by YouTube
+  // Using only universally available metrics
   const res = await youtubeAnalytics.reports.query({
     ids: `channel==${channelId}`,
     startDate,
     endDate,
-    metrics: "views,estimatedMinutesWatched,subscribersGained,subscribersLost,estimatedRevenue,averageViewDuration,annotationClickThroughRate",
+    metrics: "views,estimatedMinutesWatched,subscribersGained,subscribersLost,averageViewDuration",
     dimensions: "day",
     sort: "day",
   });
@@ -133,8 +136,8 @@ export async function getAnalytics(
     watchTimeMinutes:    Number(row[2]),
     subscribersGained:   Number(row[3]),
     subscribersLost:     Number(row[4]),
-    estimatedRevenue:    Number(row[5]),
-    averageViewDuration: Number(row[6]),
-    clickThroughRate:    Number(row[7]),
+    estimatedRevenue:    0,
+    averageViewDuration: Number(row[5]),
+    clickThroughRate:    0,
   }));
 }

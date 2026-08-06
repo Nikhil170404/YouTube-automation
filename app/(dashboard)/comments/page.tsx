@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { formatRelativeTime } from "@/lib/utils";
 import type { YoutubeChannel } from "@/types/database";
 import type { YTComment } from "@/types/youtube";
@@ -17,17 +16,15 @@ export default function CommentsPage() {
   const [editText,  setEditText]  = useState<Record<string, string>>({});
   const [status,    setStatus]    = useState("");
   const [aiContext, setAiContext]  = useState("");
-  const [autoMode,  setAutoMode]  = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: rows } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
-      const channelList = (rows || []) as YoutubeChannel[];
-      setChannels(channelList);
-      if (channelList.length) setSelected(channelList[0].id);
-    });
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: chs }) => {
+        const channelList = (chs || []).filter((c: YoutubeChannel) => c.is_active);
+        setChannels(channelList);
+        if (channelList.length) setSelected(channelList[0].id);
+      });
   }, []);
 
   useEffect(() => {

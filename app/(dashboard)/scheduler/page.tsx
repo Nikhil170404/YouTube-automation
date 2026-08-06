@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { YoutubeChannel, ScheduledVideo } from "@/types/database";
 import { format } from "date-fns";
 
@@ -25,47 +24,51 @@ export default function SchedulerPage() {
     title: "", description: "", tags: "", privacy_status: "public" as const,
     scheduled_at: "", video_file_url: "", thumbnail_url: "",
   });
-  const supabase = createClient();
+
+  function loadVideos() {
+    fetch("/api/scheduler").then((r) => r.json()).then(({ videos: vids }) => setVideos(vids || []));
+  }
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: chs } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
-      setChannels(chs || []);
-      if (chs?.length) {
-        setSelected(chs[0].id);
-        const { data: vids } = await supabase.from("scheduled_videos").select("*").eq("user_id", user.id).order("scheduled_at");
-        setVideos(vids || []);
-      }
-    });
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: chs }) => {
+        const active = (chs || []).filter((c: YoutubeChannel) => c.is_active);
+        setChannels(active);
+        if (active.length) setSelected(active[0].id);
+      });
+    loadVideos();
   }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("scheduled_videos").insert({
-      channel_id:     selected,
-      user_id:        user.id,
-      title:          form.title,
-      description:    form.description,
-      tags:           form.tags.split(",").map((t) => t.trim()).filter(Boolean),
-      privacy_status: form.privacy_status,
-      scheduled_at:   new Date(form.scheduled_at).toISOString(),
-      video_file_url: form.video_file_url || null,
-      thumbnail_url:  form.thumbnail_url  || null,
-      status:         "scheduled",
+    await fetch("/api/scheduler", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel_id:     selected,
+        title:          form.title,
+        description:    form.description,
+        tags:           form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+        privacy_status: form.privacy_status,
+        scheduled_at:   new Date(form.scheduled_at).toISOString(),
+        video_file_url: form.video_file_url || null,
+        thumbnail_url:  form.thumbnail_url  || null,
+      }),
     });
-    const { data: vids } = await supabase.from("scheduled_videos").select("*").eq("user_id", user.id).order("scheduled_at");
-    setVideos(vids || []);
+    loadVideos();
     setShowForm(false);
     setSaving(false);
     setForm({ title: "", description: "", tags: "", privacy_status: "public", scheduled_at: "", video_file_url: "", thumbnail_url: "" });
   }
 
   async function deleteVideo(id: string) {
-    await supabase.from("scheduled_videos").delete().eq("id", id);
+    await fetch("/api/scheduler", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
     setVideos((p) => p.filter((v) => v.id !== id));
   }
 

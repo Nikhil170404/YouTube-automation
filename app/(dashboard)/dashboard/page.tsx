@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { formatNumber } from "@/lib/utils";
 import type { YoutubeChannel } from "@/types/database";
 
@@ -28,40 +27,34 @@ function StatCard({ label, value, change, icon, color = "accent" }:
 }
 
 export default function DashboardPage() {
-  const [channels,   setChannels]   = useState<YoutubeChannel[]>([]);
-  const [aiReplies,  setAiReplies]  = useState({ used: 0, limit: 30 });
-  const [recentReplies, setRecent]  = useState<{ comment_author: string; reply_text: string; created_at: string }[]>([]);
-  const supabase = createClient();
+  const [channels,      setChannels]      = useState<YoutubeChannel[]>([]);
+  const [aiReplies,     setAiReplies]     = useState({ used: 0, limit: 30 });
+  const [recentReplies, setRecentReplies] = useState<{ comment_author: string; reply_text: string; created_at: string }[]>([]);
+  const [scheduledCount, setScheduledCount] = useState(0);
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: chs }) => setChannels((chs || []).filter((c: YoutubeChannel) => c.is_active)));
 
-      const [{ data: chs }, { data: profile }, { data: replies }] = await Promise.all([
-        supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true),
-        supabase.from("profiles").select("ai_replies_used, ai_replies_limit").eq("id", user.id).single(),
-        supabase.from("comment_replies").select("comment_author, reply_text, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-      ]);
-
-      setChannels(chs || []);
-      if (profile) setAiReplies({ used: profile.ai_replies_used, limit: profile.ai_replies_limit });
-      setRecent(replies || []);
-    };
-    load();
+    fetch("/api/dashboard")
+      .then((r) => r.json())
+      .then(({ profile, recentReplies: replies, scheduledCount: sc }) => {
+        if (profile) setAiReplies({ used: profile.ai_replies_used, limit: profile.ai_replies_limit });
+        setRecentReplies(replies || []);
+        setScheduledCount(sc || 0);
+      });
   }, []);
 
   const aiPct = Math.min((aiReplies.used / aiReplies.limit) * 100, 100);
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-black text-white">Overview</h1>
         <p className="text-muted text-sm mt-1">Your channel automation at a glance.</p>
       </div>
 
-      {/* No channels CTA */}
       {channels.length === 0 && (
         <div className="bg-accent/8 border border-accent/25 rounded-2xl p-8 text-center">
           <div className="w-14 h-10 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -76,15 +69,14 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Channels"        value={channels.length.toString()} icon="📺" color="accent" />
-        <StatCard label="AI Replies Today" value={aiReplies.used.toString()} change={`${aiReplies.limit - aiReplies.used} remaining`} icon="🤖" color="emerald" />
-        <StatCard label="Videos Scheduled" value="—" icon="📅" color="gold" />
-        <StatCard label="Total Replies Sent" value="—" icon="💬" color="blue" />
+        <StatCard label="Channels"          value={channels.length.toString()}    icon="📺" color="accent" />
+        <StatCard label="AI Replies Used"   value={aiReplies.used.toString()}     icon="🤖" color="emerald"
+          change={`${aiReplies.limit - aiReplies.used} remaining`} />
+        <StatCard label="Videos Scheduled"  value={scheduledCount.toString()}     icon="📅" color="gold" />
+        <StatCard label="Total Replies Sent" value={recentReplies.length > 0 ? `${recentReplies.length}+` : "0"} icon="💬" color="blue" />
       </div>
 
-      {/* AI quota */}
       <div className="bg-surface border border-border/60 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -99,9 +91,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Channels + recent replies */}
       <div className="grid md:grid-cols-2 gap-5">
-        {/* Channels */}
         <div className="bg-surface border border-border/60 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-white text-sm">Connected Channels</h2>
@@ -132,7 +122,6 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Recent replies */}
         <div className="bg-surface border border-border/60 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-white text-sm">Recent AI Replies</h2>
@@ -153,7 +142,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick actions */}
       <div>
         <h2 className="font-bold text-white text-sm mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

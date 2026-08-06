@@ -24,23 +24,23 @@ export default function SettingsPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data || { id: user.id, email: user.email || "", full_name: user.user_metadata?.full_name || "" });
-      setLoading(false);
-    });
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(({ profile: p }) => {
+        if (p) setProfile(p);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("profiles").update({
-      full_name:    profile.full_name,
-      ai_voice_context: profile.ai_voice_context,
-    }).eq("id", user.id);
+    await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ full_name: profile.full_name, ai_voice_context: profile.ai_voice_context }),
+    });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

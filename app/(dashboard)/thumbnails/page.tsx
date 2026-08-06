@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { formatRelativeTime } from "@/lib/utils";
 import type { YoutubeChannel, ThumbnailTest } from "@/types/database";
 
@@ -16,39 +15,36 @@ export default function ThumbnailsPage() {
   const [form,     setForm]     = useState({
     video_id: "", variant_a_url: "", variant_b_url: "", test_duration_hours: 24,
   });
-  const supabase = createClient();
+
+  function loadTests() {
+    fetch("/api/thumbnails").then((r) => r.json()).then(({ tests: ts }) => setTests(ts || []));
+  }
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: chs } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
-      setChannels(chs || []);
-      if (chs?.length) {
-        setSelected(chs[0].id);
-        const { data: ts } = await supabase.from("thumbnail_tests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-        setTests(ts || []);
-      }
-    });
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: chs }) => {
+        const active = (chs || []).filter((c: YoutubeChannel) => c.is_active);
+        setChannels(active);
+        if (active.length) setSelected(active[0].id);
+      });
+    loadTests();
   }, []);
 
   async function startTest(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase.from("thumbnail_tests").insert({
-      channel_id:    selected,
-      user_id:       user.id,
-      video_id:      form.video_id,
-      variant_a_url: form.variant_a_url,
-      variant_b_url: form.variant_b_url,
-      status:        "running",
-      started_at:    new Date().toISOString(),
+    await fetch("/api/thumbnails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel_id:    selected,
+        video_id:      form.video_id,
+        variant_a_url: form.variant_a_url,
+        variant_b_url: form.variant_b_url,
+      }),
     });
-
-    const { data: ts } = await supabase.from("thumbnail_tests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setTests(ts || []);
+    loadTests();
     setShowForm(false);
     setSaving(false);
     setForm({ video_id: "", variant_a_url: "", variant_b_url: "", test_duration_hours: 24 });

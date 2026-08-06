@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { YoutubeChannel } from "@/types/database";
 
 type KeywordResult = { keyword: string; relevance: number };
@@ -25,16 +24,15 @@ export default function SeoPage() {
   const [descKeyPoints,setDescKeyPoints]= useState("");
   const [descKws,      setDescKws]      = useState("");
   const [description,  setDescription]  = useState("");
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data: rows } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
-      const channelList = (rows || []) as YoutubeChannel[];
-      setChannels(channelList);
-      if (channelList.length) setSelected(channelList[0].id);
-    });
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: chs }) => {
+        const channelList = (chs || []).filter((c: YoutubeChannel) => c.is_active);
+        setChannels(channelList);
+        if (channelList.length) setSelected(channelList[0].id);
+      });
   }, []);
 
   async function searchKeywords() {

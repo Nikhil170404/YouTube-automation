@@ -27,7 +27,7 @@ const PLANS = [
     recommended: false,
     features: [
       "1 YouTube channel",
-      "250 AI comment auto-replies / mo",
+      "300 AI comment auto-replies / mo",
       "Unlimited scheduling",
       "Full SEO + keyword research",
       "Full analytics dashboard",
@@ -87,7 +87,7 @@ const COMPARE_FEATURES = [
 
 const COMPARE_DATA: Record<string, (string | boolean)[]> = {
   Free:       ["30",        "1",  true,  "Basic",   false, false, false],
-  Starter:    ["250",       "1",  true,  true,      false, false, false],
+  Starter:    ["300",       "1",  true,  true,      false, false, false],
   Pro:        ["1,000",     "3",  true,  true,      true,  false, true ],
   Agency:     ["Unlimited", "10", true,  true,      true,  "3",   true ],
   Enterprise: ["Unlimited", "∞",  true,  true,      true,  "10",  true ],
@@ -116,7 +116,7 @@ const FAQS = [
   },
   {
     q: "Is annual billing really cheaper?",
-    a: "Yes — Starter drops from $7/mo to $5/mo on annual billing ($60/yr vs $84/yr). Pro drops from $19 to $15/mo. Same features, billed once per year.",
+    a: "Yes — Starter drops from $7/mo to $5/mo on annual billing ($60/yr vs $84/yr). Pro drops from $19 to $15/mo ($180/yr vs $228/yr). Same features and limits, billed once per year.",
   },
   {
     q: "Can I connect multiple YouTube channels?",

@@ -238,7 +238,7 @@ function HeroMock() {
 const FEATURES = [
   {
     icon: icons.message, title: "AI Comment Auto-Reply",
-    desc: "Claude AI reads each comment, matches your voice, and posts a genuine reply. Rules engine lets you set triggers, templates, and tone. Never miss an engagement signal again.",
+    desc: "Set keyword rules — our AI reads each matching comment, matches your channel voice, and posts a genuine reply automatically. Never miss an engagement signal again.",
     tags: ["AI-powered", "Rules engine", "Sentiment filter", "Auto-moderation"],
     color: "accent",
   },
@@ -295,7 +295,7 @@ const PLANS = [
   },
   {
     name: "Starter", price: { mo: 7, yr: 5 }, rec: false,
-    features: ["1 channel", "250 AI auto-replies/mo", "Unlimited scheduling", "Full SEO + keywords", "Full analytics", "Email support"],
+    features: ["1 channel", "300 AI auto-replies/mo", "Unlimited scheduling", "Full SEO + keywords", "Full analytics", "Email support"],
   },
   {
     name: "Pro", price: { mo: 19, yr: 15 }, rec: true,
@@ -318,7 +318,7 @@ const FAQS = [
   },
   {
     q: "How does the AI comment reply feature work?",
-    a: "When you connect your YouTube channel, ChannelOS polls for new unreplied comments every 15 minutes. For each comment, our Claude AI model reads the context, matches your channel's voice and tone (which you configure once), and generates a genuine, non-robotic reply. You can review before posting or enable fully automatic replies. The AI never mentions it is an AI.",
+    a: "When you connect your YouTube channel, ChannelOS polls for new unreplied comments every 5 minutes. You set keyword rules — for example, trigger on 'price' or 'how do I'. When a comment matches, our AI generates a contextual reply in your channel's voice and posts it automatically. You can also set a fallback template for unmatched comments. The AI never identifies itself as a bot.",
   },
   {
     q: "Is this safe to connect to my YouTube channel?",
@@ -444,14 +444,14 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <p className="text-center text-xs text-muted uppercase tracking-[0.2em] font-semibold mb-6">Replace all of these</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {["TubeBuddy $23+/mo", "VidIQ $39+/mo", "CommentShark $20/mo", "Morningfame $13/mo"].map((t) => (
+              {["TubeBuddy $23+/mo", "VidIQ $39+/mo", "CommentShark $10+/mo", "Morningfame $13/mo"].map((t) => (
                 <div key={t} className="text-xs text-muted line-through bg-surface-2/50 border border-border/50 rounded-lg px-3 py-2 font-medium">
                   {t}
                 </div>
               ))}
               <span className="text-muted font-bold text-lg mx-2">=</span>
               <div className="text-sm font-bold text-accent bg-accent/10 border border-accent/30 rounded-lg px-4 py-2">
-                $95+/mo stacked
+                $85+/mo stacked
               </div>
               <span className="text-muted font-bold text-lg mx-2">→</span>
               <div className="text-sm font-bold text-white bg-gradient-to-r from-accent to-accent-2 rounded-lg px-4 py-2 glow-accent-sm">
@@ -469,7 +469,7 @@ export default function LandingPage() {
                 { num: 90, suffix: "%", label: "of creators report burnout — driven by admin, not content" },
                 { num: 71, suffix: "%", label: "have considered quitting YouTube entirely" },
                 { num: 5,  suffix: "+", label: "separate tools the average creator juggles today" },
-                { num: 95, suffix: "$", label: "stacking YouTube tools — before ChannelOS", prefix: true },
+                { num: 85, suffix: "$", label: "minimum to stack these tools separately", prefix: true },
               ].map((s, i) => (
                 <div key={i} className="bg-surface/60 px-6 py-8 text-center">
                   <p className="text-4xl font-black text-white mb-2">
@@ -601,8 +601,8 @@ export default function LandingPage() {
                   {[
                     { name: "TubeBuddy",    price: "$23+", c: false, s: true,  seo: true,  ab: true,  an: true,  r: false, us: false },
                     { name: "VidIQ",        price: "$39+", c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
-                    { name: "CommentShark", price: "$20",  c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
-                    { name: "NapoleonCat",  price: "$27+", c: true,  s: true,  seo: false, ab: false, an: true,  r: false, us: false },
+                    { name: "CommentShark", price: "$10+", c: true,  s: false, seo: false, ab: false, an: false, r: false, us: false },
+                    { name: "NapoleonCat",  price: "$89+", c: true,  s: true,  seo: false, ab: false, an: true,  r: false, us: false },
                     { name: "Morningfame",  price: "$13",  c: false, s: false, seo: true,  ab: false, an: true,  r: false, us: false },
                     { name: "ChannelOS Pro",price: "$19",  c: true,  s: true,  seo: true,  ab: true,  an: true,  r: true,  us: true  },
                   ].map((row) => {
@@ -630,7 +630,7 @@ export default function LandingPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted text-center mt-4">Prices shown are entry/mid-tier monthly plans as of August 2026. TubeBuddy Legend; VidIQ Boost; CommentShark Pro; NapoleonCat Standard.</p>
+            <p className="text-xs text-muted text-center mt-4">Monthly prices as of August 2026. TubeBuddy removed comment automation in 2021 — no auto-reply exists. VidIQ shows AI reply drafts only; you post manually. CommentShark Plus $9.99 gives 300 comment actions, comments only. NapoleonCat Standard $89/mo.</p>
           </div>
         </section>
 

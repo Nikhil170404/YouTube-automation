@@ -1,26 +1,42 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+// Lazy-init so missing key only throws at call time, not at build time
+let _groq: Groq | null = null;
+function getGroq() {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  return _groq;
+}
 
-// gemini-2.0-flash: free tier (AI Studio key), 15 RPM / 1500 RPD / 1M TPM
-const model = () => genai.getGenerativeModel({ model: "gemini-2.0-flash" });
+// llama-3.1-8b-instant: fastest, best quota efficiency for short tasks
+// llama-3.3-70b-versatile: higher quality for complex generation tasks
+const FAST_MODEL = "llama-3.1-8b-instant";
+const SMART_MODEL = "llama-3.3-70b-versatile";
 
-async function generate(prompt: string, retries = 2): Promise<string> {
+async function chat(
+  model: string,
+  prompt: string,
+  maxTokens = 512,
+  retries = 2
+): Promise<string> {
   for (let i = 0; i <= retries; i++) {
     try {
-      const result = await model().generateContent(prompt);
-      return result.response.text().trim();
+      const res = await getGroq().chat.completions.create({
+        model,
+        max_tokens: maxTokens,
+        messages: [{ role: "user", content: prompt }],
+      });
+      return res.choices[0]?.message?.content?.trim() ?? "";
     } catch (err: any) {
-      const is429 = err?.message?.includes("429") || err?.status === 429;
+      const is429 = err?.status === 429 || err?.message?.includes("429");
       if (is429 && i < retries) {
-        // back off 40s on rate limit (free tier allows 15 RPM)
-        await new Promise((r) => setTimeout(r, 40_000));
+        // Groq free tier: 30 RPM — wait 10s then retry
+        await new Promise((r) => setTimeout(r, 10_000));
         continue;
       }
       throw err;
     }
   }
-  throw new Error("Gemini: max retries exceeded");
+  throw new Error("Groq: max retries exceeded");
 }
 
 export async function generateCommentReply({
@@ -34,23 +50,23 @@ export async function generateCommentReply({
   channelContext?: string;
   voiceContext?: string;
 }): Promise<string> {
-  const prompt = `You are a YouTube creator's AI assistant writing comment replies.
-${channelContext ? `Channel context: ${channelContext}` : ""}
-${voiceContext ? `Writing style/voice: ${voiceContext}` : "Write in a friendly, authentic, conversational tone."}
+  const prompt = `You are a YouTube creator's assistant writing comment replies.
+${channelContext ? `Channel: ${channelContext}` : ""}
+${voiceContext ? `Voice/style: ${voiceContext}` : "Be friendly, authentic, and conversational."}
 
 Rules:
-- Keep replies concise (1-3 sentences max)
-- Be genuine and personal, not robotic
-- Vary your openers — don't always start with "Hey!" or "Thanks for commenting!"
-- Never mention you are an AI
-- Match the energy of the original comment
-- Do not use excessive emojis
+- 1-3 sentences max
+- Genuine and personal, not robotic
+- Vary your openers — never always start with "Hey!" or "Thanks!"
+- Never reveal you are an AI
+- Match the energy of the comment
+- No excessive emojis
 
 Comment from ${authorName}: "${comment}"
 
-Write a reply:`;
+Reply:`;
 
-  return generate(prompt);
+  return chat(FAST_MODEL, prompt, 150);
 }
 
 export async function generateVideoIdeas({
@@ -66,12 +82,12 @@ export async function generateVideoIdeas({
 
 Recent videos (avoid overlap):
 ${recentVideos.slice(0, 5).join("\n")}
+${trending ? `\nTrending topics:\n${trending.join("\n")}` : ""}
 
-${trending ? `Trending topics to consider:\n${trending.join("\n")}` : ""}
+Return ONLY a JSON array of 10 title strings. Example: ["Title 1", "Title 2"]
+No explanation, no markdown code fences, just the raw JSON array.`;
 
-Return only a JSON array of 10 title strings. No explanation, no markdown, just the raw JSON array.`;
-
-  const text = await generate(prompt);
+  const text = await chat(SMART_MODEL, prompt, 512);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : text.split("\n").filter((l) => l.trim()).slice(0, 10);
@@ -83,18 +99,18 @@ Return only a JSON array of 10 title strings. No explanation, no markdown, just 
 export async function optimizeTitle(title: string, keywords: string[]): Promise<string[]> {
   const prompt = `Optimize this YouTube video title for CTR and SEO. Generate 5 alternatives.
 
-Original title: "${title}"
-Target keywords: ${keywords.join(", ")}
+Original: "${title}"
+Keywords: ${keywords.join(", ")}
 
 Rules:
 - Under 70 characters each
 - Include primary keyword naturally
 - Use curiosity, numbers, or clear benefit
-- Avoid clickbait
+- No clickbait
 
-Return only a JSON array of 5 title strings. No explanation, no markdown, just the raw JSON array.`;
+Return ONLY a JSON array of 5 title strings. No explanation, no code fences, just the raw JSON.`;
 
-  const text = await generate(prompt);
+  const text = await chat(FAST_MODEL, prompt, 300);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : [title];
@@ -118,7 +134,7 @@ export async function generateVideoDescription({
 
 Title: "${title}"
 Channel: ${channelName}
-Key points covered: ${keyPoints.join(", ")}
+Key points: ${keyPoints.join(", ")}
 Keywords to include: ${keywords.join(", ")}
 
 Format:
@@ -126,24 +142,25 @@ Format:
 - What you'll learn (3-5 bullet points)
 - Timestamps placeholder
 - Call to action (subscribe + comment)
-- Relevant hashtags (5-8)
+- Hashtags (5-8)
 
-Keep it under 500 words.`;
+Under 500 words.`;
 
-  return generate(prompt);
+  return chat(SMART_MODEL, prompt, 700);
 }
 
-export async function researchKeywords(query: string): Promise<{ keyword: string; relevance: number }[]> {
-  const prompt = `Generate 10 YouTube keyword suggestions for the topic: "${query}"
+export async function researchKeywords(
+  query: string
+): Promise<{ keyword: string; relevance: number }[]> {
+  const prompt = `Generate 10 YouTube keyword suggestions for: "${query}"
 
-For each keyword, estimate a relevance/search-volume score from 1-100.
+For each keyword give a relevance score 1-100 based on search potential.
 
-Return only a JSON array like:
-[{"keyword": "example keyword", "relevance": 85}, ...]
+Return ONLY a JSON array. Example:
+[{"keyword": "example", "relevance": 85}]
+No explanation, no code fences, just the raw JSON array.`;
 
-No explanation, no markdown, just the raw JSON array.`;
-
-  const text = await generate(prompt);
+  const text = await chat(FAST_MODEL, prompt, 400);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : [];

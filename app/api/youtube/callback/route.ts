@@ -2,6 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForTokens, getChannelInfo } from "@/lib/youtube/client";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
+interface StatePayload {
+  uid:        string;
+  email:      string;
+  full_name:  string | null;
+  avatar_url: string | null;
+  ts:         number;
+}
+
+function parseState(raw: string | null): StatePayload | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, "base64url").toString());
+    if (
+      parsed.uid && typeof parsed.uid === "string" &&
+      parsed.email && typeof parsed.email === "string" &&
+      typeof parsed.ts === "number" &&
+      Date.now() - parsed.ts < 10 * 60 * 1000 // 10-minute expiry
+    ) {
+      return parsed as StatePayload;
+    }
+  } catch { /* malformed */ }
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code  = searchParams.get("code");
@@ -14,59 +38,51 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Resolve user ID: prefer state param (Safari ITP strips cookies on cross-site redirect)
-    // then fall back to session cookie (Edge / Chrome / Firefox)
-    let userId: string | null = null;
-    const stateParam = searchParams.get("state");
-    if (stateParam) {
-      try {
-        const parsed = JSON.parse(Buffer.from(stateParam, "base64url").toString());
-        // Accept state tokens issued within the last 10 minutes
-        if (parsed.uid && typeof parsed.uid === "string" && Date.now() - parsed.ts < 10 * 60 * 1000) {
-          userId = parsed.uid;
-        }
-      } catch { /* malformed state — fall through to cookie */ }
-    }
+    // ── Identify the user ────────────────────────────────────────────────────
+    // State param path: Safari ITP strips cookies on cross-site redirect, so
+    // the connect route embeds user info in state before sending to Google.
+    const stateData = parseState(searchParams.get("state"));
 
+    let userId:    string | null = stateData?.uid        ?? null;
+    let userEmail: string | null = stateData?.email      ?? null;
+    let fullName:  string | null = stateData?.full_name  ?? null;
+    let avatarUrl: string | null = stateData?.avatar_url ?? null;
+
+    // Cookie path: Edge / Chrome / Firefox retain the session cookie
     if (!userId) {
       const authClient = await createClient();
       const { data: { user } } = await authClient.auth.getUser();
-      userId = user?.id ?? null;
+      if (user) {
+        userId    = user.id;
+        userEmail = user.email ?? null;
+        fullName  = user.user_metadata?.full_name  ?? null;
+        avatarUrl = user.user_metadata?.avatar_url ?? null;
+      }
     }
 
-    if (!userId) {
+    if (!userId || !userEmail) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
     }
 
-    // Use service client for all DB operations — bypasses RLS on server
+    // ── All DB writes via service client (bypasses RLS) ──────────────────────
     const supabase = await createServiceClient();
 
-    // Fetch user metadata from Auth so we can upsert the profile
-    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
-    if (!authUser) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
-    }
+    // Ensure profile row exists (trigger may not have fired at signup time)
+    await supabase.from("profiles").upsert(
+      { id: userId, email: userEmail, full_name: fullName, avatar_url: avatarUrl },
+      { onConflict: "id" }
+    );
 
-    // Ensure profile row exists (trigger may not have fired if tables were created after signup)
-    await supabase.from("profiles").upsert({
-      id:         userId,
-      email:      authUser.email!,
-      full_name:  authUser.user_metadata?.full_name  ?? null,
-      avatar_url: authUser.user_metadata?.avatar_url ?? null,
-    }, { onConflict: "id" });
-
+    // ── Exchange code for tokens and fetch channel info ──────────────────────
     const tokens      = await exchangeCodeForTokens(code);
     const channelInfo = await getChannelInfo({
       access_token:  tokens.access_token,
       refresh_token: tokens.refresh_token!,
     });
 
-    // Check plan channel limit
+    // ── Check plan channel limit ─────────────────────────────────────────────
     const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", userId)
-      .single();
+      .from("profiles").select("plan").eq("id", userId).single();
 
     const { count } = await supabase
       .from("youtube_channels")
@@ -84,7 +100,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Upsert the channel and check for errors
+    // ── Save the channel ─────────────────────────────────────────────────────
     const { error: upsertError } = await supabase.from("youtube_channels").upsert({
       user_id:          userId,
       channel_id:       channelInfo.channelId,
@@ -95,7 +111,7 @@ export async function GET(request: NextRequest) {
       video_count:      channelInfo.videoCount,
       access_token:     tokens.access_token,
       refresh_token:    tokens.refresh_token!,
-      token_expires_at: new Date(tokens.expiry_date).toISOString(),
+      token_expires_at: new Date(tokens.expiry_date!).toISOString(),
       is_active:        true,
     }, { onConflict: "user_id,channel_id" });
 

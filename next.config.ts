@@ -8,9 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["googleapis"],
-  },
+  serverExternalPackages: ["googleapis"],
 };
 
 export default nextConfig;

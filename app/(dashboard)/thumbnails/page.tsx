@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRelativeTime } from "@/lib/utils";
-import type { YoutubeChannel } from "@/types/database";
-import type { ThumbnailTest } from "@/types/database";
+import type { YoutubeChannel, ThumbnailTest } from "@/types/database";
 
 export default function ThumbnailsPage() {
   const [channels, setChannels] = useState<YoutubeChannel[]>([]);
@@ -13,7 +12,7 @@ export default function ThumbnailsPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [form,     setForm]     = useState({
-    video_id: "", thumbnail_a_url: "", thumbnail_b_url: "", test_duration_hours: 24,
+    video_id: "", variant_a_url: "", variant_b_url: "", test_duration_hours: 24,
   });
   const supabase = createClient();
 
@@ -36,25 +35,21 @@ export default function ThumbnailsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const endsAt = new Date();
-    endsAt.setHours(endsAt.getHours() + form.test_duration_hours);
-
     await supabase.from("thumbnail_tests").insert({
       channel_id:    selected,
       user_id:       user.id,
       video_id:      form.video_id,
-      thumbnail_a_url: form.thumbnail_a_url,
-      thumbnail_b_url: form.thumbnail_b_url,
+      variant_a_url: form.variant_a_url,
+      variant_b_url: form.variant_b_url,
       status:        "running",
       started_at:    new Date().toISOString(),
-      ends_at:       endsAt.toISOString(),
     });
 
     const { data: ts } = await supabase.from("thumbnail_tests").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     setTests(ts || []);
     setShowForm(false);
     setSaving(false);
-    setForm({ video_id: "", thumbnail_a_url: "", thumbnail_b_url: "", test_duration_hours: 24 });
+    setForm({ video_id: "", variant_a_url: "", variant_b_url: "", test_duration_hours: 24 });
   }
 
   function statusBadge(status: string) {
@@ -66,12 +61,9 @@ export default function ThumbnailsPage() {
     return `text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${map[status] || "bg-border text-muted"}`;
   }
 
-  function winner(t: ThumbnailTest) {
-    if (t.status !== "completed") return null;
-    const ctrA = t.clicks_a && t.impressions_a ? t.clicks_a / t.impressions_a : 0;
-    const ctrB = t.clicks_b && t.impressions_b ? t.clicks_b / t.impressions_b : 0;
-    if (ctrA === ctrB) return "Tie";
-    return ctrA > ctrB ? "Thumbnail A wins" : "Thumbnail B wins";
+  function winnerLabel(t: ThumbnailTest) {
+    if (t.status !== "completed" || t.winner === null) return null;
+    return t.winner === "a" ? "Thumbnail A wins" : "Thumbnail B wins";
   }
 
   return (
@@ -109,13 +101,13 @@ export default function ThumbnailsPage() {
               </div>
               <div>
                 <label className="block text-xs text-muted uppercase tracking-wider mb-1.5 font-semibold">Thumbnail A URL *</label>
-                <input required type="url" value={form.thumbnail_a_url} onChange={(e) => setForm((p) => ({ ...p, thumbnail_a_url: e.target.value }))}
+                <input required type="url" value={form.variant_a_url} onChange={(e) => setForm((p) => ({ ...p, variant_a_url: e.target.value }))}
                   placeholder="https://... (publicly accessible image)"
                   className="w-full bg-surface-2 border border-border/70 rounded-xl px-4 py-2.5 text-sm text-white placeholder-muted focus:border-accent/60 focus:outline-none" />
               </div>
               <div>
                 <label className="block text-xs text-muted uppercase tracking-wider mb-1.5 font-semibold">Thumbnail B URL *</label>
-                <input required type="url" value={form.thumbnail_b_url} onChange={(e) => setForm((p) => ({ ...p, thumbnail_b_url: e.target.value }))}
+                <input required type="url" value={form.variant_b_url} onChange={(e) => setForm((p) => ({ ...p, variant_b_url: e.target.value }))}
                   placeholder="https://..."
                   className="w-full bg-surface-2 border border-border/70 rounded-xl px-4 py-2.5 text-sm text-white placeholder-muted focus:border-accent/60 focus:outline-none" />
               </div>
@@ -161,9 +153,9 @@ export default function ThumbnailsPage() {
       ) : (
         <div className="space-y-4">
           {tests.map((t) => {
-            const ctrA = t.impressions_a ? ((t.clicks_a || 0) / t.impressions_a * 100).toFixed(1) : "—";
-            const ctrB = t.impressions_b ? ((t.clicks_b || 0) / t.impressions_b * 100).toFixed(1) : "—";
-            const w = winner(t);
+            const ctrA = t.variant_a_ctr != null ? (t.variant_a_ctr * 100).toFixed(1) : "—";
+            const ctrB = t.variant_b_ctr != null ? (t.variant_b_ctr * 100).toFixed(1) : "—";
+            const w = winnerLabel(t);
             return (
               <div key={t.id} className="bg-surface border border-border/60 rounded-2xl p-5">
                 <div className="flex items-start justify-between mb-4 gap-2">
@@ -171,9 +163,9 @@ export default function ThumbnailsPage() {
                     <p className="text-xs text-muted font-mono mb-1">Video ID: {t.video_id}</p>
                     <div className="flex items-center gap-2">
                       <span className={statusBadge(t.status)}>{t.status}</span>
-                      {t.ends_at && (
+                      {t.ended_at && (
                         <span className="text-[10px] text-muted">
-                          {t.status === "running" ? `Ends ${formatRelativeTime(t.ends_at)}` : `Ended ${formatRelativeTime(t.ends_at)}`}
+                          Ended {formatRelativeTime(t.ended_at)}
                         </span>
                       )}
                     </div>
@@ -187,48 +179,30 @@ export default function ThumbnailsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Thumbnail A */}
-                  <div className={`rounded-xl overflow-hidden border-2 transition-colors ${w === "Thumbnail A wins" ? "border-emerald/50" : "border-border/40"}`}>
-                    {t.thumbnail_a_url
-                      ? <img src={t.thumbnail_a_url} alt="Thumbnail A" className="w-full aspect-video object-cover" />
+                  <div className={`rounded-xl overflow-hidden border-2 transition-colors ${t.winner === "a" ? "border-emerald/50" : "border-border/40"}`}>
+                    {t.variant_a_url
+                      ? <img src={t.variant_a_url} alt="Thumbnail A" className="w-full aspect-video object-cover" />
                       : <div className="w-full aspect-video bg-surface-2 flex items-center justify-center">
                           <span className="text-muted text-xs">Thumbnail A</span>
                         </div>
                     }
                     <div className="p-3 bg-surface-2/50">
                       <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Variant A</p>
-                      <div className="flex gap-4">
-                        <div>
-                          <p className="text-sm font-black text-white">{ctrA}%</p>
-                          <p className="text-[10px] text-muted">CTR</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-white">{(t.impressions_a || 0).toLocaleString()}</p>
-                          <p className="text-[10px] text-muted">Impressions</p>
-                        </div>
-                      </div>
+                      <p className="text-sm font-black text-white">{ctrA}{ctrA !== "—" ? "%" : ""} <span className="text-[10px] text-muted font-normal">CTR</span></p>
                     </div>
                   </div>
 
                   {/* Thumbnail B */}
-                  <div className={`rounded-xl overflow-hidden border-2 transition-colors ${w === "Thumbnail B wins" ? "border-emerald/50" : "border-border/40"}`}>
-                    {t.thumbnail_b_url
-                      ? <img src={t.thumbnail_b_url} alt="Thumbnail B" className="w-full aspect-video object-cover" />
+                  <div className={`rounded-xl overflow-hidden border-2 transition-colors ${t.winner === "b" ? "border-emerald/50" : "border-border/40"}`}>
+                    {t.variant_b_url
+                      ? <img src={t.variant_b_url} alt="Thumbnail B" className="w-full aspect-video object-cover" />
                       : <div className="w-full aspect-video bg-surface-2 flex items-center justify-center">
                           <span className="text-muted text-xs">Thumbnail B</span>
                         </div>
                     }
                     <div className="p-3 bg-surface-2/50">
                       <p className="text-[10px] text-muted uppercase tracking-wider font-bold mb-1">Variant B</p>
-                      <div className="flex gap-4">
-                        <div>
-                          <p className="text-sm font-black text-white">{ctrB}%</p>
-                          <p className="text-[10px] text-muted">CTR</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-white">{(t.impressions_b || 0).toLocaleString()}</p>
-                          <p className="text-[10px] text-muted">Impressions</p>
-                        </div>
-                      </div>
+                      <p className="text-sm font-black text-white">{ctrB}{ctrB !== "—" ? "%" : ""} <span className="text-[10px] text-muted font-normal">CTR</span></p>
                     </div>
                   </div>
                 </div>

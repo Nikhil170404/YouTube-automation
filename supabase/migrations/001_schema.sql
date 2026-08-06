@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email                  TEXT NOT NULL UNIQUE,
   full_name              TEXT,
   avatar_url             TEXT,
+  ai_voice_context       TEXT,
   plan                   TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free','starter','pro','agency','enterprise')),
   ai_replies_used        INTEGER NOT NULL DEFAULT 0,
   ai_replies_limit       INTEGER NOT NULL DEFAULT 30,

@@ -21,9 +21,10 @@ export default function CommentsPage() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
-      setChannels(data || []);
-      if (data?.length) setSelected(data[0].id);
+      const { data: rows } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).eq("is_active", true);
+      const channelList = (rows || []) as YoutubeChannel[];
+      setChannels(channelList);
+      if (channelList.length) setSelected(channelList[0].id);
     });
   }, []);
 

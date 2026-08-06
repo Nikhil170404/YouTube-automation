@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
-// Row types defined independently to avoid circular Database self-references
+// Row shapes defined before Database to avoid any self-reference issues
 type ProfileRow = {
   id: string;
   email: string;
@@ -109,6 +109,8 @@ type ThumbnailTestRow = {
   created_at: string;
 };
 
+// Supabase 2.x requires `Relationships` on every table; omitting it collapses
+// the inferred row type to `never` in the query builder generics.
 export interface Database {
   public: {
     Tables: {
@@ -116,38 +118,49 @@ export interface Database {
         Row: ProfileRow;
         Insert: Omit<ProfileRow, "created_at" | "updated_at">;
         Update: Partial<Omit<ProfileRow, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
       };
       youtube_channels: {
         Row: YoutubeChannelRow;
         Insert: Omit<YoutubeChannelRow, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<YoutubeChannelRow, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
       };
       comment_rules: {
         Row: CommentRuleRow;
         Insert: Omit<CommentRuleRow, "id" | "match_count" | "created_at">;
         Update: Partial<Omit<CommentRuleRow, "id" | "created_at">>;
+        Relationships: [];
       };
       comment_replies: {
         Row: CommentReplyRow;
         Insert: Omit<CommentReplyRow, "id" | "created_at">;
         Update: Partial<Omit<CommentReplyRow, "id" | "created_at">>;
+        Relationships: [];
       };
       scheduled_videos: {
         Row: ScheduledVideoRow;
         Insert: Omit<ScheduledVideoRow, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<ScheduledVideoRow, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
       };
       analytics_snapshots: {
         Row: AnalyticsSnapshotRow;
         Insert: Omit<AnalyticsSnapshotRow, "id" | "created_at">;
         Update: Partial<Omit<AnalyticsSnapshotRow, "id" | "created_at">>;
+        Relationships: [];
       };
       thumbnail_tests: {
         Row: ThumbnailTestRow;
         Insert: Omit<ThumbnailTestRow, "id" | "created_at">;
         Update: Partial<Omit<ThumbnailTestRow, "id" | "created_at">>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 

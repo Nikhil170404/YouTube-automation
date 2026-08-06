@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,11 +16,9 @@ export default function SignupPage() {
   const [error,    setError]    = useState("");
   const [done,     setDone]     = useState(false);
 
-  const supabase = createClient();
-
   async function handleGoogleSignup() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await createClient().auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard` },
     });
@@ -30,7 +30,7 @@ export default function SignupPage() {
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email,
       password,
       options: {

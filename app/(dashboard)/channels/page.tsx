@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatNumber } from "@/lib/utils";
 import type { YoutubeChannel } from "@/types/database";
 
-export default function ChannelsPage() {
+function ChannelsContent() {
   const [channels, setChannels] = useState<YoutubeChannel[]>([]);
   const [loading,  setLoading]  = useState(true);
   const params = useSearchParams();
@@ -110,7 +112,6 @@ export default function ChannelsPage() {
         </div>
       )}
 
-      {/* What happens when you connect */}
       <div className="mt-10 bg-surface border border-border/60 rounded-2xl p-6">
         <h2 className="text-sm font-bold text-white mb-4">What happens when you connect a channel?</h2>
         <div className="grid sm:grid-cols-3 gap-4">
@@ -128,5 +129,13 @@ export default function ChannelsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ChannelsPage() {
+  return (
+    <Suspense fallback={<div className="p-6"><div className="h-8 w-48 bg-surface rounded-lg animate-pulse mb-6" /></div>}>
+      <ChannelsContent />
+    </Suspense>
   );
 }

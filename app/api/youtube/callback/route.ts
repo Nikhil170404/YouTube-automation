@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForTokens, getChannelInfo } from "@/lib/youtube/client";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,11 +14,23 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // Use anon client only to verify the authenticated user session
+    const authClient = await createClient();
+    const { data: { user } } = await authClient.auth.getUser();
     if (!user) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
     }
+
+    // Use service client for all DB operations — bypasses RLS on server
+    const supabase = await createServiceClient();
+
+    // Ensure profile row exists (trigger may not have fired if tables were created after signup)
+    await supabase.from("profiles").upsert({
+      id:         user.id,
+      email:      user.email!,
+      full_name:  user.user_metadata?.full_name  ?? null,
+      avatar_url: user.user_metadata?.avatar_url ?? null,
+    }, { onConflict: "id" });
 
     const tokens      = await exchangeCodeForTokens(code);
     const channelInfo = await getChannelInfo({
@@ -49,8 +61,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Upsert the channel
-    await supabase.from("youtube_channels").upsert({
+    // Upsert the channel and check for errors
+    const { error: upsertError } = await supabase.from("youtube_channels").upsert({
       user_id:          user.id,
       channel_id:       channelInfo.channelId,
       channel_name:     channelInfo.channelName,
@@ -63,6 +75,13 @@ export async function GET(request: NextRequest) {
       token_expires_at: new Date(tokens.expiry_date).toISOString(),
       is_active:        true,
     }, { onConflict: "user_id,channel_id" });
+
+    if (upsertError) {
+      console.error("Channel upsert error:", upsertError);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/channels?error=save_failed`
+      );
+    }
 
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/channels?success=channel_connected`

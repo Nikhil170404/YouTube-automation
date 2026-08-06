@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { formatNumber } from "@/lib/utils";
 import type { YoutubeChannel } from "@/types/database";
 
@@ -14,20 +13,24 @@ function ChannelsContent() {
   const params = useSearchParams();
   const success = params.get("success");
   const error   = params.get("error");
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase.from("youtube_channels").select("*").eq("user_id", user.id).order("created_at");
-      setChannels(data || []);
-      setLoading(false);
-    });
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then(({ channels: data }) => {
+        setChannels(data || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   async function disconnectChannel(id: string) {
     if (!confirm("Disconnect this channel? Auto-replies and scheduling for it will stop.")) return;
-    await supabase.from("youtube_channels").update({ is_active: false }).eq("id", id);
+    await fetch("/api/channels", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: false }),
+    });
     setChannels((p) => p.filter((c) => c.id !== id));
   }
 

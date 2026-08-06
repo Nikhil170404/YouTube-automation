@@ -37,12 +37,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, is_active } = await request.json();
+    const body = await request.json();
+    const { id, is_active, auto_reply_enabled } = body;
     const supabase = await createServiceClient();
 
     const { error } = await supabase
       .from("youtube_channels")
-      .update({ is_active })
+      .update({
+        ...(is_active !== undefined         && { is_active }),
+        ...(auto_reply_enabled !== undefined && { auto_reply_enabled }),
+      })
       .eq("id", id)
       .eq("user_id", user.id);
 

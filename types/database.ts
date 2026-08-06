@@ -62,6 +62,7 @@ export interface Database {
           refresh_token: string;
           token_expires_at: string;
           is_active: boolean;
+          auto_reply_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -78,6 +79,7 @@ export interface Database {
           refresh_token: string;
           token_expires_at: string;
           is_active?: boolean;
+          auto_reply_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -94,6 +96,7 @@ export interface Database {
           refresh_token?: string;
           token_expires_at?: string;
           is_active?: boolean;
+          auto_reply_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };

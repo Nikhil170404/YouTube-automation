@@ -34,6 +34,15 @@ function ChannelsContent() {
     setChannels((p) => p.filter((c) => c.id !== id));
   }
 
+  async function toggleAutoReply(id: string, current: boolean) {
+    await fetch("/api/channels", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, auto_reply_enabled: !current }),
+    });
+    setChannels((p) => p.map((c) => c.id === id ? { ...c, auto_reply_enabled: !current } : c));
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-start justify-between mb-6">
@@ -99,10 +108,21 @@ function ChannelsContent() {
                     {ch.is_active ? "Active" : "Paused"}
                   </span>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4 items-center">
                   <span className="text-xs text-muted">{formatNumber(ch.subscriber_count || 0)} subs</span>
                   <span className="text-xs text-muted">{ch.video_count?.toLocaleString() || 0} videos</span>
                   <span className="text-xs text-muted">Connected {new Date(ch.created_at).toLocaleDateString()}</span>
+                  {/* Auto-reply toggle */}
+                  <button
+                    onClick={() => toggleAutoReply(ch.id, ch.auto_reply_enabled)}
+                    className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                      ch.auto_reply_enabled
+                        ? "bg-accent/15 text-accent border-accent/30 hover:bg-accent/25"
+                        : "bg-surface-2 text-muted border-border/50 hover:border-border hover:text-white"
+                    }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${ch.auto_reply_enabled ? "bg-accent" : "bg-muted"}`} />
+                    {ch.auto_reply_enabled ? "Auto-reply ON" : "Auto-reply OFF"}
+                  </button>
                 </div>
               </div>
               <div className="flex gap-2">

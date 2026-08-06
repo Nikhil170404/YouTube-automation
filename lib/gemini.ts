@@ -2,11 +2,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
-const flash  = () => genai.getGenerativeModel({ model: "gemini-2.0-flash" });
-const flash15 = () => genai.getGenerativeModel({ model: "gemini-1.5-flash" });
+// gemini-2.0-flash: free tier, 15 RPM / 1500 RPD / 1M TPM
+const model = () => genai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-async function generate(model: ReturnType<typeof flash>, prompt: string): Promise<string> {
-  const result = await model.generateContent(prompt);
+async function generate(prompt: string): Promise<string> {
+  const result = await model().generateContent(prompt);
   return result.response.text().trim();
 }
 
@@ -37,7 +37,7 @@ Comment from ${authorName}: "${comment}"
 
 Write a reply:`;
 
-  return generate(flash(), prompt);
+  return generate(prompt);
 }
 
 export async function generateVideoIdeas({
@@ -58,7 +58,7 @@ ${trending ? `Trending topics to consider:\n${trending.join("\n")}` : ""}
 
 Return only a JSON array of 10 title strings. No explanation, no markdown, just the raw JSON array.`;
 
-  const text = await generate(flash15(), prompt);
+  const text = await generate(prompt);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : text.split("\n").filter((l) => l.trim()).slice(0, 10);
@@ -81,7 +81,7 @@ Rules:
 
 Return only a JSON array of 5 title strings. No explanation, no markdown, just the raw JSON array.`;
 
-  const text = await generate(flash(), prompt);
+  const text = await generate(prompt);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : [title];
@@ -117,7 +117,7 @@ Format:
 
 Keep it under 500 words.`;
 
-  return generate(flash15(), prompt);
+  return generate(prompt);
 }
 
 export async function researchKeywords(query: string): Promise<{ keyword: string; relevance: number }[]> {
@@ -130,7 +130,7 @@ Return only a JSON array like:
 
 No explanation, no markdown, just the raw JSON array.`;
 
-  const text = await generate(flash(), prompt);
+  const text = await generate(prompt);
   try {
     const match = text.match(/\[[\s\S]*\]/);
     return match ? JSON.parse(match[0]) : [];

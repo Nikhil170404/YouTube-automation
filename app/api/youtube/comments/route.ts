@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     isAiGenerated = true;
 
     // Increment AI usage counter
-    await supabase.rpc("increment_ai_replies", { user_id: user.id });
+    const { data: prof } = await supabase.from("profiles").select("ai_replies_used").eq("id", user.id).single();
+    if (prof) {
+      await supabase.from("profiles").update({ ai_replies_used: prof.ai_replies_used + 1 }).eq("id", user.id);
+    }
   }
 
   // Post to YouTube

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createServiceClient } from "@/lib/supabase/server";
+import type { PlanType } from "@/types/database";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-01-27.acacia" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
 
 const PLAN_LIMITS: Record<string, { plan: string; limit: number }> = {
   [process.env.STRIPE_PRICE_STARTER_MONTHLY || ""]: { plan: "starter", limit: 300  },
@@ -21,17 +22,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const supabase = createServiceClient();
+  const supabase = await createServiceClient();
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.CheckoutSession;
+    const session = event.data.object as Stripe.Checkout.Session;
     const userId  = session.metadata?.user_id;
     const plan    = session.metadata?.plan;
     if (!userId || !plan) return NextResponse.json({ ok: true });
 
     const limits: Record<string, number> = { starter: 300, pro: 1000, agency: 5000 };
     await supabase.from("profiles").update({
-      plan,
+      plan: plan as PlanType,
       ai_replies_limit: limits[plan] ?? 30,
       stripe_customer_id: session.customer as string,
     }).eq("id", userId);

@@ -7,7 +7,7 @@ import { generateCommentReply } from "@/lib/gemini";
 const MAX_PER_CHANNEL = 10;
 
 export async function GET(request: NextRequest) {
-  // Vercel Cron sends Authorization: Bearer <CRON_SECRET>
+  // Called by cron-job.org — set header: Authorization: Bearer <CRON_SECRET>
   const auth = request.headers.get("authorization");
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -2,12 +2,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
-// gemini-2.0-flash: free tier, 15 RPM / 1500 RPD / 1M TPM
+// gemini-2.0-flash: free tier (AI Studio key), 15 RPM / 1500 RPD / 1M TPM
 const model = () => genai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-async function generate(prompt: string): Promise<string> {
-  const result = await model().generateContent(prompt);
-  return result.response.text().trim();
+async function generate(prompt: string, retries = 2): Promise<string> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const result = await model().generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err: any) {
+      const is429 = err?.message?.includes("429") || err?.status === 429;
+      if (is429 && i < retries) {
+        // back off 40s on rate limit (free tier allows 15 RPM)
+        await new Promise((r) => setTimeout(r, 40_000));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Gemini: max retries exceeded");
 }
 
 export async function generateCommentReply({

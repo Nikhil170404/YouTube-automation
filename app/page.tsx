@@ -267,9 +267,9 @@ const FEATURES = [
     color: "accent",
   },
   {
-    icon: icons.scissors, title: "Shorts Auto-Clipper",
-    desc: "Select timestamps from any of your existing long-form videos. We export a vertical cut with auto-captions, ready to post as a Short, Reel, or TikTok.",
-    tags: ["Auto-captions", "Vertical format", "Multi-platform", "Batch export"],
+    icon: icons.zap, title: "AI Content Generator",
+    desc: "Out of ideas? Enter your channel topic and get AI-generated video concepts backed by what's trending. Then auto-write your title variants and full description — optimized for search.",
+    tags: ["Video ideas", "Title variants", "AI descriptions", "SEO optimized"],
     color: "emerald",
   },
 ];
@@ -291,23 +291,23 @@ const iconBg: Record<string, string> = {
 const PLANS = [
   {
     name: "Free", price: { mo: 0, yr: 0 }, rec: false,
-    features: ["1 channel", "30 AI replies/mo", "5 scheduled uploads/mo", "Basic analytics", "Community access"],
+    features: ["1 channel", "30 AI auto-replies/mo", "3 scheduled uploads/mo", "Basic SEO tools", "Analytics dashboard"],
   },
   {
-    name: "Starter", price: { mo: 9, yr: 7 }, rec: false,
-    features: ["1 channel", "300 AI replies/mo", "Unlimited scheduling", "Full SEO tools", "3 competitors tracked", "Email support"],
+    name: "Starter", price: { mo: 7, yr: 5 }, rec: false,
+    features: ["1 channel", "250 AI auto-replies/mo", "Unlimited scheduling", "Full SEO + keywords", "Full analytics", "Email support"],
   },
   {
     name: "Pro", price: { mo: 19, yr: 15 }, rec: true,
-    features: ["3 channels", "1,000 AI replies/mo", "Thumbnail A/B testing", "Shorts auto-clipper", "10 competitors tracked", "Webhook alerts", "Priority support"],
+    features: ["3 channels", "1,000 AI auto-replies/mo", "Thumbnail A/B testing", "Advanced SEO", "Priority support"],
   },
   {
     name: "Agency", price: { mo: 49, yr: 39 }, rec: false,
-    features: ["10 channels", "Unlimited AI replies", "3 team seats", "White-label option", "Bulk operations", "30 competitors", "Dedicated support"],
+    features: ["10 channels", "Unlimited AI replies", "3 team seats", "Bulk scheduling", "Dedicated support"],
   },
   {
     name: "Enterprise", price: { mo: 99, yr: 79 }, rec: false,
-    features: ["Unlimited channels", "Unlimited everything", "10 team seats", "API access", "Custom AI voice", "Custom AI training", "SLA + priority"],
+    features: ["Unlimited channels", "Unlimited AI replies", "10 team seats", "Custom onboarding", "Dedicated account manager"],
   },
 ];
 
@@ -338,7 +338,7 @@ const FAQS = [
   },
   {
     q: "How is ChannelOS different from TubeBuddy or VidIQ?",
-    a: "TubeBuddy and VidIQ are excellent SEO tools but don't do comment automation or thumbnail A/B testing at a meaningful level. NapoleonCat does social inbox management (including YouTube comments) but starts at $89/month and has no SEO, scheduling, or thumbnail features. ChannelOS combines all six core jobs — comments, SEO, scheduling, analytics, thumbnail testing, and content repurposing — in one platform at a lower combined price than stacking two of those tools.",
+    a: "TubeBuddy and VidIQ are great SEO tools but have no AI comment auto-reply. CommentShark does comment replies but nothing else — and costs $20/mo for that one feature alone. ChannelOS gives you AI comment auto-reply, video scheduling, SEO tools, thumbnail A/B testing, and analytics all in one — starting at $7/month, less than what any single competitor charges for just one of those jobs.",
   },
   {
     q: "Do you offer refunds?",
@@ -401,7 +401,7 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-lg text-text-2 leading-relaxed mb-8 max-w-lg animate-fade-up" style={{ animationDelay: "0.2s" }}>
-                  AI comment replies, smart video scheduler, SEO keyword tools, thumbnail A/B tests, and analytics — all in one place. Replace 5 tools with one, starting at $9/month.
+                  AI comment auto-reply, smart video scheduler, SEO keyword tools, thumbnail A/B tests, and analytics — all in one place. Replace 4 tools with one, starting at $7/month.
                 </p>
 
                 <div className="flex flex-wrap gap-3 mb-10 animate-fade-up" style={{ animationDelay: "0.3s" }}>
@@ -489,7 +489,7 @@ export default function LandingPage() {
             <div ref={r2} className="reveal text-center mb-16">
               <p className="text-xs text-accent uppercase tracking-[0.2em] font-bold mb-3">Everything You Need</p>
               <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-4">
-                Six tools. <span className="text-gradient">One platform.</span>
+                Five tools. <span className="text-gradient">One platform.</span>
               </h2>
               <p className="text-text-2 text-lg max-w-xl mx-auto">
                 Every feature a serious YouTube creator or agency needs — built deep, not bolted on.
@@ -752,7 +752,7 @@ export default function LandingPage() {
                   <span className="text-gradient">Start growing.</span>
                 </h2>
                 <p className="text-text-2 text-lg mb-8 max-w-lg mx-auto">
-                  Connect your first channel in 30 seconds. Free plan includes 30 AI replies and 5 scheduled uploads — no credit card required.
+                  Connect your first channel in 30 seconds. Free plan includes 30 AI auto-replies and 3 scheduled uploads — no credit card required.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   <Link href="/signup"

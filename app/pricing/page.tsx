@@ -14,24 +14,23 @@ const PLANS = [
     recommended: false,
     features: [
       "1 YouTube channel",
-      "30 AI comment replies / mo",
-      "5 scheduled uploads / mo",
-      "Basic analytics dashboard",
-      "YouTube SEO tools (limited)",
-      "Community forum access",
+      "30 AI comment auto-replies / mo",
+      "3 scheduled uploads / mo",
+      "Basic SEO tools",
+      "Analytics dashboard",
     ],
   },
   {
     name: "Starter",
     tagline: "Solo creators getting serious",
-    price: { mo: 9, yr: 7 },
+    price: { mo: 7, yr: 5 },
     recommended: false,
     features: [
       "1 YouTube channel",
-      "300 AI comment replies / mo",
+      "250 AI comment auto-replies / mo",
       "Unlimited scheduling",
-      "Full SEO keyword tools",
-      "3 competitor channels tracked",
+      "Full SEO + keyword research",
+      "Full analytics dashboard",
       "Email support",
     ],
   },
@@ -42,11 +41,9 @@ const PLANS = [
     recommended: true,
     features: [
       "3 YouTube channels",
-      "1,000 AI comment replies / mo",
+      "1,000 AI comment auto-replies / mo",
       "Thumbnail A/B testing",
-      "Shorts auto-clipper",
-      "10 competitors tracked",
-      "Webhook alerts",
+      "Advanced SEO optimization",
       "Priority email support",
     ],
   },
@@ -57,11 +54,9 @@ const PLANS = [
     recommended: false,
     features: [
       "10 YouTube channels",
-      "Unlimited AI replies",
+      "Unlimited AI comment replies",
       "3 team seats",
-      "White-label option",
-      "Bulk operations",
-      "30 competitors tracked",
+      "Bulk scheduling",
       "Dedicated support",
     ],
   },
@@ -72,66 +67,60 @@ const PLANS = [
     recommended: false,
     features: [
       "Unlimited channels",
-      "Unlimited everything",
+      "Unlimited AI replies",
       "10 team seats",
-      "Full API access",
-      "Custom AI voice training",
-      "SLA guarantee",
+      "Custom onboarding",
       "Dedicated account manager",
     ],
   },
 ];
 
 const COMPARE_FEATURES = [
-  "AI comment replies",
-  "Channels",
-  "Scheduling",
+  "AI comment auto-replies / mo",
+  "YouTube channels",
+  "Video scheduling",
   "SEO tools",
   "Thumbnail A/B testing",
-  "Shorts auto-clipper",
-  "Competitor tracking",
   "Team seats",
-  "API access",
-  "White-label",
-  "SLA",
+  "Priority support",
 ];
 
 const COMPARE_DATA: Record<string, (string | boolean)[]> = {
-  Free:       [true,  "1",       true,  "Limited", false, false, false, false, false, false, false],
-  Starter:    [true,  "1",       true,  true,      false, false, "3",  false, false, false, false],
-  Pro:        [true,  "3",       true,  true,      true,  true,  "10", false, false, false, false],
-  Agency:     [true,  "10",      true,  true,      true,  true,  "30", "3",  false, true,  false],
-  Enterprise: [true,  "∞",       true,  true,      true,  true,  "30", "10", true,  true,  true ],
+  Free:       ["30",        "1",  true,  "Basic",   false, false, false],
+  Starter:    ["250",       "1",  true,  true,      false, false, false],
+  Pro:        ["1,000",     "3",  true,  true,      true,  false, true ],
+  Agency:     ["Unlimited", "10", true,  true,      true,  "3",   true ],
+  Enterprise: ["Unlimited", "∞",  true,  true,      true,  "10",  true ],
 };
 
 const FAQS = [
   {
     q: "What's included in the free plan?",
-    a: "The free plan gives you 1 connected channel, 30 AI comment replies per month, 5 scheduled uploads, and access to limited SEO tools. It's designed to let you test the core features without a time limit or credit card.",
+    a: "The free plan gives you 1 connected channel, 30 AI comment auto-replies per month, 3 scheduled uploads, and basic SEO tools. No time limit and no credit card required — use it as long as you like.",
+  },
+  {
+    q: "How does AI comment auto-reply work?",
+    a: "You set keyword rules — for example, any comment containing 'price' or 'tutorial'. When a new comment on your video matches a rule, ChannelOS uses AI to write a contextual, on-brand reply and posts it automatically. You can also set a fallback template for comments that don't match any rule.",
   },
   {
     q: "Can I switch plans at any time?",
-    a: "Yes. You can upgrade, downgrade, or cancel at any time from your account settings. Upgrades take effect immediately (prorated). Downgrades take effect at the end of your current billing period.",
+    a: "Yes. Upgrade, downgrade, or cancel any time from your account settings. Upgrades take effect immediately (prorated). Downgrades kick in at the end of your billing period.",
   },
   {
     q: "What happens when I hit my AI reply limit?",
-    a: "You'll get a notification before hitting the limit. Once reached, auto-replies pause — your comments are still collected and queued, and manual replies still work. Upgrade to instantly restore auto-replies. Unused quota does not roll over.",
+    a: "Auto-replies pause for the rest of the month — your comments are still collected, and you can reply manually. Upgrade any time to instantly restore auto-replies. Unused quota does not roll over.",
   },
   {
     q: "Do you offer refunds?",
-    a: "Yes. All paid plans come with a 14-day money-back guarantee, no questions asked. Cancel within 14 days of your first payment for a full refund.",
+    a: "Yes. All paid plans come with a 14-day money-back guarantee, no questions asked.",
   },
   {
-    q: "Is annual billing really 20% off?",
-    a: "Yes — and the discount is applied immediately to your first charge. There's no catch: annual billing is the same features, same limits, just billed once per year at the reduced rate.",
+    q: "Is annual billing really cheaper?",
+    a: "Yes — Starter drops from $7/mo to $5/mo on annual billing ($60/yr vs $84/yr). Pro drops from $19 to $15/mo. Same features, billed once per year.",
   },
   {
-    q: "What counts as one AI reply?",
-    a: "Each comment that receives an AI-generated response counts as one reply. Template-based replies (where you write the text yourself) do not count against your AI reply limit.",
-  },
-  {
-    q: "Can I manage multiple YouTube accounts under one ChannelOS login?",
-    a: "Yes. You can connect multiple YouTube channels to a single ChannelOS account. The number of channels you can manage depends on your plan: 1 on Free/Starter, 3 on Pro, 10 on Agency, unlimited on Enterprise.",
+    q: "Can I connect multiple YouTube channels?",
+    a: "Yes. Free and Starter support 1 channel. Pro supports 3 channels. Agency supports 10. Enterprise is unlimited — all under one login.",
   },
 ];
 
@@ -336,7 +325,7 @@ export default function PricingPage() {
                   Start free today.
                 </h2>
                 <p className="text-text-2 text-lg mb-8 max-w-lg mx-auto">
-                  30 AI replies, 5 scheduled uploads, full SEO tools — no credit card, no time limit.
+                  30 AI auto-replies, 3 scheduled uploads, SEO tools — no credit card, no time limit.
                 </p>
                 <Link
                   href="/signup"

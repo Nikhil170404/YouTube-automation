@@ -204,7 +204,7 @@ export default async function BlogPostPage({
           <div className="mt-10 glass rounded-2xl border border-accent/25 p-6 text-center">
             <p className="text-sm font-bold text-white mb-1">Try ChannelOS free</p>
             <p className="text-xs text-text-2 mb-4">
-              30 AI replies, unlimited scheduling, full SEO tools — no credit card.
+              30 AI auto-replies, 3 scheduled uploads, SEO tools — no credit card.
             </p>
             <Link
               href="/signup"
